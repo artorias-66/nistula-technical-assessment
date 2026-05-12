@@ -1,0 +1,20 @@
+{
+  "name": "nistula-technical-assessment",
+  "version": "1.0.0",
+  "description": "Guest message handler for Nistula's unified messaging platform",
+  "main": "app/index.js",
+  "scripts": {
+    "start": "node app/index.js",
+    "dev": "node --watch app/index.js",
+    "test": "node tests/testWebhook.js"
+  },
+  "keywords": [],
+  "author": "Anubhav Verma",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "uuid": "^14.0.0"
+  }
+}
