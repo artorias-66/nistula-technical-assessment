@@ -65,6 +65,11 @@ const testPayloads = [
   }
 ];
 
+// Pause between requests so we don't blow past the API rate limit
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function runTests() {
   console.log('='.repeat(60));
   console.log('  Nistula Webhook — Integration Tests');
@@ -73,7 +78,15 @@ async function runTests() {
 
   let passed = 0;
 
-  for (const test of testPayloads) {
+  for (let i = 0; i < testPayloads.length; i++) {
+    const test = testPayloads[i];
+
+    // Wait between requests to respect the rate limit (30k tokens/min)
+    if (i > 0) {
+      console.log('  ⏳ Waiting 15s before next request (rate limit)...\n');
+      await sleep(15000);
+    }
+
     console.log(`▶ ${test.name}`);
     console.log('-'.repeat(50));
 
@@ -90,7 +103,7 @@ async function runTests() {
         console.log(`  Query type  : ${data.query_type}`);
         console.log(`  Confidence  : ${data.confidence_score}`);
         console.log(`  Action      : ${data.action}`);
-        console.log(`  Draft reply : ${data.drafted_reply.substring(0, 120)}...`);
+        console.log(`  Draft reply : ${data.drafted_reply.substring(0, 150)}...`);
         console.log(`  ✓ PASSED`);
         passed++;
       } else {
