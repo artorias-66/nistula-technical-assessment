@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app/index.js",
     "dev": "node --watch app/index.js",
-    "test": "node tests/testWebhook.js"
+    "test": "node tests/testWebhook.js",
+    "test:unit": "node tests/testClassifier.js"
   },
   "keywords": [],
   "author": "Anubhav Verma",
