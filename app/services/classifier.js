@@ -52,7 +52,7 @@ const rules = [
       'charge', 'charges', 'tariff', 'per night', 'total cost',
       'budget', 'discount', 'offer', 'deal', 'package'
     ],
-    priority: 4
+    priority: 5
   },
   {
     type: 'pre_sales_availability',
@@ -61,7 +61,7 @@ const rules = [
       'reservation', 'dates', 'vacant', 'open', 'free dates',
       'slot', 'slots'
     ],
-    priority: 5
+    priority: 4
   },
   {
     type: 'general_enquiry',
