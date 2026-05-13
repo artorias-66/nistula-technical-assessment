@@ -102,17 +102,21 @@ thinking.md                  # Part 3 — Thinking question answers
 
 The webhook processes every message through a four-stage pipeline:
 
+```mermaid
+flowchart LR
+    A["Inbound Payload"] --> B["Normalise"]
+    B --> C["Classify"]
+    C --> D["Claude API"]
+    D --> E["Confidence Engine"]
+    E --> F["Response"]
 ```
-Inbound payload
-      |
-      v
-+-----------+    +----------+    +----------+    +----------+
-| Normalise | -> | Classify | -> | AI Draft | -> |  Score   |
-+-----------+    +----------+    +----------+    +----------+
-      |               |               |               |
- Unified schema  Query type     Claude reply    Confidence +
- with UUID       assigned       generated       action decided
-```
+
+| Stage | Module | What it does |
+|-------|--------|--------------|
+| Normalise | `normalizer.js` | Validates and reshapes the raw payload into a unified schema with a generated UUID |
+| Classify | `classifier.js` | Assigns a query type using keyword matching before the AI call |
+| AI Draft | `aiHandler.js` | Sends the message + property context to Claude and gets a drafted reply |
+| Score | `confidence.js` | Computes a confidence score and decides the action (auto_send / agent_review / escalate) |
 
 Each stage is a separate module so they can be tested, swapped, or extended independently.
 
@@ -172,7 +176,10 @@ I wanted the scoring to be **explainable**. A black-box number doesn't help an o
 Classification needs to be fast and deterministic. A keyword approach runs in microseconds, costs nothing, and gives us a query type *before* calling Claude — so we can tailor the system prompt per category. It's also easy to debug: you can see exactly which keywords matched and why.
 
 **Why CommonJS instead of ES modules?**
-No strong reason — it's what Express projects have used for years and avoids the `.mjs` / `"type": "module"` friction. Either would work fine.
+I chose CommonJS to keep the setup frictionless and aligned with the default Express ecosystem tooling. Either convention would work here — this avoided the `.mjs` / `"type": "module"` configuration overhead for a project of this size.
+
+**Idempotency:**
+In production, I would add idempotency handling (e.g. deduplication on a hash of `source + guest_name + message + timestamp`) to prevent duplicate message processing if a channel provider retries the webhook delivery.
 
 **Why a separate confidence module instead of asking Claude to self-rate?**
 LLMs are not reliable self-assessors. They tend to be confidently wrong. The confidence score here measures *how well-positioned the system was to generate a good answer* (clear intent + good context + safe query type), not how good the model thinks its own output is.
@@ -197,3 +204,15 @@ LLMs are not reliable self-assessors. They tend to be confidently wrong. The con
 Start the server (`npm run dev`) in one terminal, then run `npm test` in another.
 
 **Classifier unit tests** (`npm run test:unit`) — 17 cases covering keyword matching, tiebreak logic, multi-category messages, and edge cases like zero-keyword fallback. These run offline with no server or API calls needed.
+
+## Future Improvements
+
+Given more time, I would improve the system in these areas:
+
+- **Smarter classification** — replace keyword matching with a lightweight embedding classifier (e.g. sentence-transformers + cosine similarity) for better handling of ambiguous or multilingual messages.
+- **Conversation memory** — maintain thread context so follow-up messages ("Actually, make that 3 nights") don't get classified in isolation.
+- **Reservation lookup** — query the database by `booking_ref` to inject real booking details (dates, guest count, payment status) into the Claude prompt.
+- **Webhook reliability** — queue inbound messages using BullMQ or SQS so a Claude API timeout doesn't lose the guest's message.
+- **Retry + circuit breaker** — add exponential backoff for Claude API calls and a circuit breaker to fail fast during sustained outages.
+- **Persistence** — store all inbound/outbound messages in PostgreSQL (the schema in `schema.sql` is designed for this).
+- **Observability** — add structured logging with correlation IDs and track classification accuracy over time to tune confidence thresholds.

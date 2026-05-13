@@ -6,27 +6,27 @@
 
 ## Question A — The Immediate Response
 
-> Hi [Guest Name], I'm really sorry about the hot water — I understand how frustrating that is, especially at this hour. I've flagged this as urgent and our caretaker is being contacted right now. Someone will reach out to you shortly. Regarding the refund, I've passed your request to our team and they'll follow up directly. Please message again if you need anything in the meantime.
+> Hi [Guest Name], I'm really sorry about the hot water — I understand how frustrating that is, especially at this hour. I've flagged this as urgent and our caretaker is being contacted right now to get this sorted before your guests arrive. Regarding the refund, I've noted your request and our team will follow up with you directly. Please don't hesitate to message again if you need anything.
 
-Empathetic but measured. It acknowledges the problem, sets an expectation (caretaker being contacted), and sidesteps the refund — that's a manager's decision, not the AI's. At 3am the goal is making the guest feel heard, not resolving billing.
+The tone is empathetic but doesn't over-promise. It validates the frustration, creates a clear next action (caretaker being contacted), and deflects the refund — that's a manager call, not the AI's. At 3am the priority is making the guest feel heard and assured that a human is on the way.
 
 ## Question B — The System Design
 
-The message gets classified as `complaint` and the pipeline forces an `escalate` action regardless of confidence score — this already works in the current codebase.
+The message gets classified as `complaint` and the pipeline forces `escalate` regardless of confidence score — this is already built into the codebase.
 
 Beyond the reply:
 
-1. **Page the on-call person** via SMS and push notification. The caretaker and ops manager both get pinged — email alone won't cut it at 3am.
-2. **Start a 30-minute SLA timer.** If nobody acknowledges, re-page and widen the blast radius to a second manager.
-3. **Log the full trail.** The inbound message, AI draft, escalation trigger, and every subsequent human action go into the `messages` table. The conversation status flips to `escalated`.
-4. **Surface guest history** so whoever picks it up has full context without making the guest repeat themselves.
+1. **Page the on-call person** via SMS and push notification. Both the property caretaker and the ops manager get alerted — email alone won't cut it at 3am.
+2. **Start a 30-minute SLA timer.** If nobody acknowledges, re-escalate to a second manager. If still no response at 60 minutes, trigger a fallback (e.g. an automated follow-up to the guest promising morning resolution).
+3. **Log everything.** Inbound message, AI draft, escalation trigger, acknowledgement timestamps, and every subsequent action go into the `messages` table. The conversation status flips to `escalated`.
+4. **Surface guest context** — booking dates, past interactions, previous complaints — so whoever picks it up can respond without asking the guest to repeat themselves.
 
-The key principle: at 3am, speed of human contact matters more than the quality of the AI draft.
+Core principle: at 3am, speed of human contact matters more than the quality of the AI draft.
 
 ## Question C — The Learning
 
 Three hot water complaints at the same property in two months is a maintenance problem, not a messaging problem.
 
-The system should run a periodic query: group complaints by `property_id` and keyword cluster, flag any property that crosses a threshold (say, 2+ similar complaints within a rolling 60-day window). When Villa B1 trips this, it alerts the property operations team — not guest-facing staff.
+The system should aggregate complaints by `property_id` and issue category, flagging any property that crosses a threshold (e.g. 2+ similar complaints in a 60-day window). When Villa B1 trips this, it alerts the property ops team — not guest-facing staff — and auto-creates a preventive maintenance ticket.
 
-What I'd build: a batch job that scans recent complaint messages, extracts the subject (plumbing, AC, cleanliness), and tracks recurrence per property. When a pattern surfaces, it auto-creates a maintenance ticket before the next guest checks in. The fix for complaint #4 is a plumber visit after complaint #2 — not a better auto-reply after complaint #3.
+Longer term, I'd build a **property health score**: a composite metric tracking complaint frequency, category distribution, and resolution times per property. Properties trending downward get surfaced in a dashboard before guests ever need to complain. The fix for complaint #4 is a plumber visit after complaint #2 — not a better auto-reply after complaint #3.
