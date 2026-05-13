@@ -104,14 +104,14 @@ The webhook processes every message through a four-stage pipeline:
 
 ```
 Inbound payload
-      │
-      ▼
- ┌──────────┐     ┌────────────┐     ┌───────────┐     ┌────────────┐
- │ Normalise │ ──▶ │  Classify  │ ──▶ │ AI Draft  │ ──▶ │   Score    │
- └──────────┘     └────────────┘     └───────────┘     └────────────┘
-      │                 │                  │                  │
-  Unified schema   Query type       Claude reply      Confidence +
-  with UUID        assigned         generated         action decided
+      |
+      v
++-----------+    +----------+    +----------+    +----------+
+| Normalise | -> | Classify | -> | AI Draft | -> |  Score   |
++-----------+    +----------+    +----------+    +----------+
+      |               |               |               |
+ Unified schema  Query type     Claude reply    Confidence +
+ with UUID       assigned       generated       action decided
 ```
 
 Each stage is a separate module so they can be tested, swapped, or extended independently.
