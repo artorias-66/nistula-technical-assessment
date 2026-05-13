@@ -2,11 +2,19 @@
 
 A backend service that handles inbound guest messages for Nistula's villa rental platform. It receives messages from multiple channels (WhatsApp, Booking.com, Airbnb, Instagram, direct), normalises them into a unified schema, classifies the query type, drafts a reply using Claude, and returns a confidence-scored response.
 
+## Assignment Parts
+
+| Part | Description | File(s) |
+|------|-------------|----------|
+| 1 | Guest Message Handler — webhook + AI pipeline | `app/` |
+| 2 | PostgreSQL Database Schema | `schema.sql` |
+| 3 | Thinking Question — 3am complaint scenario | `thinking.md` |
+
 ## Quick Start
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/nistula-technical-assessment.git
+git clone https://github.com/artorias-66/nistula-technical-assessment.git
 cd nistula-technical-assessment
 
 # 2. Install dependencies
@@ -84,7 +92,10 @@ app/
 └── data/
     └── propertyContext.js   # Mock property details for Villa B1
 tests/
-    └── testWebhook.js      # 5 integration test payloads
+├── testWebhook.js          # 5 integration test payloads
+└── testClassifier.js       # 17 classifier unit tests
+schema.sql                   # Part 2 — PostgreSQL database schema
+thinking.md                  # Part 3 — Thinking question answers
 ```
 
 ## Architecture
@@ -175,7 +186,7 @@ LLMs are not reliable self-assessors. They tend to be confidently wrong. The con
 
 ## Testing
 
-The test script (`npm test`) sends 5 payloads covering all major query types:
+**Integration tests** (`npm test`) — sends 5 payloads covering all major query types:
 
 1. Availability check via WhatsApp
 2. Check-in info request via Airbnb
@@ -184,3 +195,5 @@ The test script (`npm test`) sends 5 payloads covering all major query types:
 5. General enquiry via direct channel
 
 Start the server (`npm run dev`) in one terminal, then run `npm test` in another.
+
+**Classifier unit tests** (`npm run test:unit`) — 17 cases covering keyword matching, tiebreak logic, multi-category messages, and edge cases like zero-keyword fallback. These run offline with no server or API calls needed.
